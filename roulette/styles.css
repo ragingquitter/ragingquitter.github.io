@@ -1,0 +1,151 @@
+:root {
+    --background-color: #ffffff;
+    --text-color: #000000;
+    --table-header-color: #f2f2f2;
+    --button-hover-bg: #3f3f3f;
+    --button-hover-border: #4322ff;
+    --button-hover-text: #ffffff;
+}
+
+body.dark-mode {
+    --background-color: #121212;
+    --text-color: #e0e0e0;
+    --table-header-color: #1f1f1f;
+    --button-hover-bg: #dfdfdf;
+    --button-hover-border: #ff2626;
+    --button-hover-text: #000000;
+}
+
+body {
+    background-color: var(--background-color);
+    color: var(--text-color);
+    font-family: Arial, sans-serif;
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.container {
+    max-width: 800px;
+    margin: 20px auto;
+    text-align: center;
+}
+
+.grid {
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    gap: 2px;
+    margin-bottom: 20px;
+}
+
+.grid div {
+    border: 1px solid var(--text-color);
+    border-radius: 5px;
+    padding: 10px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.grid div:hover {
+    background-color: var(--button-hover-bg);
+    border-color: var(--button-hover-border);
+    color: var(--button-hover-text);
+}
+
+.table-container {
+    margin-top: 20px;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th, td {
+    border: 1px solid var(--text-color);
+    padding: 8px;
+}
+
+th {
+    background-color: var(--table-header-color);
+}
+
+.home-container {
+    float: left;
+    text-align: left;
+    margin-bottom: 10px;
+    margin-top: 10px;
+}
+
+a.button {
+    border: 1px solid var(--text-color);
+    color: var(--text-color);
+    border-radius: 5px;
+    padding: 10px;
+    cursor: pointer;
+}
+
+a.button:hover {
+    background-color: red;
+    border-color: var(--button-hover-border);
+    color: var(--button-hover-text);
+}
+
+.toggle-container {
+    float: right;
+    text-align: right;
+    margin-bottom: 10px;
+}
+
+.toggle-container label {
+    cursor: pointer;
+    font-size: 1rem;
+}
+
+.toggle-switch {
+    position: relative;
+    display: inline-block;
+    width: 34px;
+    height: 20px;
+}
+
+.toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.slider {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    border-radius: 34px;
+    transition: 0.4s;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 14px;
+    width: 14px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    border-radius: 50%;
+    transition: 0.4s;
+}
+
+input:checked + .slider {
+    background-color: #66bb6a;
+}
+
+input:checked + .slider:before {
+    transform: translateX(14px);
+}
+
+textarea {
+    width: 100%;
+    height: 100px;
+    margin-bottom: 10px;
+}
