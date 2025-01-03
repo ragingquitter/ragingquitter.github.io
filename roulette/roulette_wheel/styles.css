@@ -1,0 +1,112 @@
+@font-face {
+    font-family: Digital;
+    src: url(src/fonts/DS-DIGIB.TTF);
+}
+body {
+    font-family: Arial, sans-serif;
+    text-align: center;
+    background-color: #121212;
+    color: #ffffff;
+    margin: 0;
+    padding: 0;
+}
+h1 {
+    margin: 20px 0;
+}
+.home-container {
+    margin: 20px auto;
+    display: flex;
+    column-gap: 100px;
+    align-items: center;
+    justify-content: center;
+}
+a.button {
+    border: 1px solid #e0e0e0;
+    color: #e0e0e0;
+    border-radius: 5px;
+    padding: 10px;
+    cursor: pointer;
+}
+a.button:hover {
+    background-color: #dfdfdf;
+    border-color: #ff2626;
+    color: #000000;
+}
+.placeholder-screen {
+    width: 400px;
+    height: 200px;
+    margin: 20px auto;
+    border: 5px solid #444;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5em;
+    font-weight: bold;
+    font-family: 'Courier New', Courier, monospace;
+    flex-direction: column;
+    padding: 10px;
+    text-align: center;
+}
+.bet-options {
+    margin: 30px;
+    /* border: 1px solid red; */
+}
+button {
+    background-color: #444;
+    color: #fff;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    margin: 5px;
+}
+.bet-color-button {
+    margin: 20px auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    /* border: 1px solid yellow; */
+}
+button.red {
+    background-color: rgb(224, 70, 70);
+    color: black;
+}
+button.black {
+    background-color: black;
+    color: white;
+}
+button:hover {
+    background-color: #666;
+}
+input {
+    padding: 5px;
+    margin: 5px;
+    border-radius: 5px;
+    border: 1px solid #444;
+}
+.balance {
+    width: 400px;
+    height: 100px;
+    margin: 20px auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    font-family: Digital;
+    font-size: 40px;
+    color: red;
+    border: 5px solid #444;
+}
+.history-box {
+    width: 500px;
+    margin: 20px auto;
+    padding: 20px 10px;
+    border: 1px solid #444;
+    border-radius: 10px;
+    background-color: #1e1e1e;
+    color: #fff;
+    font-family: 'Courier New', Courier, monospace;
+    overflow-y: auto;
+    max-height: 200px;
+}

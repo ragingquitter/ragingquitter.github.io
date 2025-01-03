@@ -20,7 +20,7 @@ body {
     background-color: var(--background-color);
     color: var(--text-color);
     font-family: Arial, sans-serif;
-    transition: background-color 0.3s ease, color 0.3s ease;
+    /* transition: background-color 0.3s ease, color 0.3s ease; */
 }
 
 .container {
@@ -84,7 +84,7 @@ a.button {
 }
 
 a.button:hover {
-    background-color: red;
+    background-color: var(--button-hover-bg);
     border-color: var(--button-hover-border);
     color: var(--button-hover-text);
 }

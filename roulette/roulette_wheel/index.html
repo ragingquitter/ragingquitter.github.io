@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Roulette Simulator</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="home-container">
+        <a href="../../index.html" class="button" style="text-decoration: none">Home</a>
+        <a href="../roulette_data/index.html" class="button" style="text-decoration: none">Data</a>
+    </div>
+    <h1>Roulette Simulator</h1>
+    <div class="placeholder-screen" id="placeholder-screen" style="background-color: #000; color: #0f0;">
+        Waiting to spin...
+    </div>
+    <div class="bet-options">
+        <label for="bet-amount">Bet Amount:</label>
+        <input type="number" id="bet-amount" value="100" min="1" size="8">
+        <label for="spin-count">Number of Spins:</label>
+        <input type="number" id="spin-count" value="1" min="1" size="6">
+        <div class="bet-color-button">
+            <button class="red" onclick="placeBet('red')">Bet on Red</button>
+            <button class="black" onclick="placeBet('black')">Bet on Black</button>
+        </div>
+        <div class="bet-number-content">
+            <label for="bet-number">Bet on a Number:</label>
+            <input type="number" id="bet-number" placeholder="0-36" min="0" max="36" size="4">
+            <button onclick="placeBet('number')">Place Bet</button>
+        </div>
+    </div>
+    <div class="balance" id="balance">Balance: $5000</div>
+    <h2>Spin History <span id="spin-counter">(0 spins)</span></h2>
+    <div class="history-box" id="history-box">
+    </div>
+    <button onclick="resetGame()">Reset All</button>
+    <script src="main.js"></script>
+</body>
+</html>

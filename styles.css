@@ -34,14 +34,13 @@
   a.button {
     background-color: #444;
     border-radius: 5px;
-    border: none;
     color: #fff;
-    padding: 10px 20px;
+    padding: 10px 10px;
     cursor: pointer;
-    margin: 5px;
+    /* border: 1px solid red; */
   }
 
-  button:hover {
+  a.button:hover {
     background-color: #666;
   }
 
@@ -53,6 +52,7 @@
     overflow: hidden;
     border-radius: 10px;
     border:2px solid rgb(182, 182, 182);
+    /* border: 1px solid blue; */
   }
 
   div.header {
@@ -67,5 +67,8 @@
   }
     
   div.container {
+    display: grid;
     padding: 15px;
+    row-gap: 15px;
+    /* border: 1px solid yellow; */
   }
