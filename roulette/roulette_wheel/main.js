@@ -11,8 +11,7 @@ document.getElementById('spin-counter').textContent = `(${totalSpins} spins)`;
 updateHistoryBox();
 
 function spinRoulette() {
-    const outcome = Math.floor(Math.random() * 38); // Simulates 0-36 + 00
-    if (outcome === 37) return { number: '00', color: 'green' }; // 00
+    const outcome = Math.floor(Math.random() * 37); // Simulates 0-36
     const color = outcome === 0 ? 'green' : outcome % 2 === 0 ? 'black' : 'red';
     return { number: outcome.toString(), color: color };
 }
@@ -30,7 +29,7 @@ function placeBet(type) {
         return;
     }
 
-    if (isNaN(spinCount) || spinCount <= 0) {
+    if (isNaN(spinCount) || spinCount <= 0 || spinCount > 500) {
         placeholderScreen.textContent = 'Invalid number of spins!';
         placeholderScreen.style.color = '#f00';
         return;
@@ -73,9 +72,24 @@ function placeBet(type) {
     localStorage.setItem('rouletteBalance', balance);
     localStorage.setItem('rouletteHistory', JSON.stringify(spinHistory));
 
-    placeholderScreen.textContent = `After ${spinCount} spins: ${wins} Wins, ${losses} Losses`;  
+    if (spinCount === 1) {
+        const singleOutcome = outcomes[0];
+        const outcomeColor = spinHistory.length > 0 ? spinRoulette().color : '';
+        placeholderScreen.textContent = `Landed on: ${singleOutcome} (${outcomeColor.toUpperCase()})`;
+
+    } else {
+        placeholderScreen.textContent = `After ${spinCount} spins: ${wins} Wins, ${losses} Losses`;
+    }
+
     document.getElementById('balance').textContent = `Balance: $${balance}`;
     updateHistoryBox();
+}
+
+function copyHistoryToClipboard() {
+    const historyBox = document.getElementById('history-box');
+    navigator.clipboard.writeText(historyBox.textContent)
+        .then(() => alert('Spin history copied to clipboard!'))
+        .catch(() => alert('Failed to copy spin history.'));
 }
 
 function resetGame() {

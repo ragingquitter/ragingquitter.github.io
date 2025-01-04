@@ -2,6 +2,7 @@
     font-family: Digital;
     src: url(src/fonts/DS-DIGIB.TTF);
 }
+
 body {
     font-family: Arial, sans-serif;
     text-align: center;
@@ -10,9 +11,11 @@ body {
     margin: 0;
     padding: 0;
 }
+
 h1 {
     margin: 20px 0;
 }
+
 .home-container {
     margin: 20px auto;
     display: flex;
@@ -20,6 +23,7 @@ h1 {
     align-items: center;
     justify-content: center;
 }
+
 a.button {
     border: 1px solid #e0e0e0;
     color: #e0e0e0;
@@ -27,11 +31,13 @@ a.button {
     padding: 10px;
     cursor: pointer;
 }
+
 a.button:hover {
     background-color: #dfdfdf;
     border-color: #ff2626;
     color: #000000;
 }
+
 .placeholder-screen {
     width: 400px;
     height: 200px;
@@ -48,10 +54,11 @@ a.button:hover {
     padding: 10px;
     text-align: center;
 }
+
 .bet-options {
     margin: 30px;
-    /* border: 1px solid red; */
 }
+
 button {
     background-color: #444;
     color: #fff;
@@ -61,30 +68,37 @@ button {
     cursor: pointer;
     margin: 5px;
 }
+
 .bet-color-button {
     margin: 20px auto;
     display: flex;
     align-items: center;
     justify-content: center;
-    /* border: 1px solid yellow; */
 }
+
 button.red {
     background-color: rgb(224, 70, 70);
-    color: black;
+    color: rgb(255, 255, 255);
+    border: 1px solid rgb(131, 131, 131);
 }
+
 button.black {
     background-color: black;
     color: white;
+    border: 1px solid rgb(128, 128, 128);
 }
+
 button:hover {
     background-color: #666;
 }
+
 input {
     padding: 5px;
     margin: 5px;
     border-radius: 5px;
     border: 1px solid #444;
 }
+
 .balance {
     width: 400px;
     height: 100px;
@@ -98,6 +112,7 @@ input {
     color: red;
     border: 5px solid #444;
 }
+
 .history-box {
     width: 500px;
     margin: 20px auto;

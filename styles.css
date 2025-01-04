@@ -37,7 +37,6 @@
     color: #fff;
     padding: 10px 10px;
     cursor: pointer;
-    /* border: 1px solid red; */
   }
 
   a.button:hover {
@@ -52,7 +51,6 @@
     overflow: hidden;
     border-radius: 10px;
     border:2px solid rgb(182, 182, 182);
-    /* border: 1px solid blue; */
   }
 
   div.header {
@@ -63,12 +61,10 @@
     line-height: 1.5;
     padding: 10px;
     width: auto;
-    /* border:1px solid rgb(229, 255, 0); */
   }
     
   div.container {
     display: grid;
-    padding: 15px;
     row-gap: 15px;
-    /* border: 1px solid yellow; */
+    padding: 15px;
   }
