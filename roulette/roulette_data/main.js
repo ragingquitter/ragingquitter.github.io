@@ -6,14 +6,28 @@ let actionHistory = [];
 let sortColumn = null;
 let sortAscending = true;
 let totalSpins = 0;
+let streakTrackers = Array.from({ length: totalPockets }, () => 0); // Tracks current streaks
+let milestoneCounts = {
+    100: Array.from({ length: totalPockets }, () => 0),
+    200: Array.from({ length: totalPockets }, () => 0),
+    300: Array.from({ length: totalPockets }, () => 0),
+    400: Array.from({ length: totalPockets }, () => 0),
+    500: Array.from({ length: totalPockets }, () => 0),
+}; // Tracks counts for each milestone
 
 function updateHitTable() {
-    const hitTableBody = document.querySelector('#hitTable tbody'); // Select the table body
+    const hitTableBody = document.querySelector('#hitTable tbody');
+    if (!hitTableBody) {
+        console.error('hitTableBody is null. Ensure the table is correctly rendered.');
+        return;
+    }
+
     hitTableBody.innerHTML = ''; // Clear existing rows
+
+    const selectedMilestone = parseInt(document.getElementById('streakSelector').value, 10);
 
     for (let i = 0; i < totalPockets; i++) {
         const probability = totalSpins > 0 ? ((counts[i] / totalSpins) * 100).toFixed(2) : 0;
-        const averageRatio = totalSpins > 0 ? (counts[i] / totalSpins).toFixed(3) : 0;
 
         // Add a new row for each number
         hitTableBody.innerHTML += `
@@ -22,6 +36,7 @@ function updateHitTable() {
             <td>${notClickedCounts[i]}</td>
             <td>${counts[i]}</td>
             <td>${probability}%</td>
+            <td>${milestoneCounts[selectedMilestone][i] || 0}</td>
         </tr>`;
     }
 
@@ -32,7 +47,7 @@ function updateHitTable() {
             let aValue = a.cells[sortColumn].textContent.trim();
             let bValue = b.cells[sortColumn].textContent.trim();
 
-            // Handle numeric sorting, stripping % for probability
+            // Handle numeric sorting (strip % for probability)
             aValue = parseFloat(aValue.replace('%', '')) || 0;
             bValue = parseFloat(bValue.replace('%', '')) || 0;
 
@@ -40,57 +55,112 @@ function updateHitTable() {
         });
         rows.forEach((row) => hitTableBody.appendChild(row)); // Reappend sorted rows
     }
+
     // Update total spins display
     document.getElementById('totalSpins').textContent = totalSpins;
 }
 
-
 function resetAll() {
     counts.fill(0);
-    totalSpins = 0;
     notClickedCounts.fill(0);
+    streakTrackers.fill(0);
+    Object.keys(milestoneCounts).forEach((milestone) => {
+        milestoneCounts[milestone].fill(0);
+    });
+
+    totalSpins = 0;
     enteredNumbers = [];
     actionHistory = [];
     sortColumn = null;
     sortAscending = true;
+
     localStorage.clear();
+
+    // Reset dropdown to default value (100)
+    document.getElementById('streakSelector').value = '100';
+
     updateHitTable();
 }
 
 function incrementCountAndRecordHit(number) {
-    const previousNotClicked = [...notClickedCounts];
-    counts[number]++;
-    totalSpins++;
-    enteredNumbers.push(number);
-    actionHistory.push({ number, type: 'increment', previousNotClicked });
+    counts[number]++; // Increment the hit count for the clicked number
+    totalSpins++; // Increment total spins
+    enteredNumbers.push(number); // Track the entered number
 
+    // Save current state for undo
+    actionHistory.push({
+        number,
+        type: 'increment',
+        previousNotClicked: [...notClickedCounts],
+        previousStreakTrackers: [...streakTrackers], // Save the current streaks
+        previousMilestoneCounts: JSON.parse(JSON.stringify(milestoneCounts)), // Deep copy milestone counts
+    });
+
+    // Update "Not Hit" and streak logic
     for (let i = 0; i < totalPockets; i++) {
-        if (i !== number) {
-            notClickedCounts[i]++;
+        if (i === number) {
+            // Reset streak for the hit number
+            streakTrackers[i] = 0;
+            notClickedCounts[i] = 0; // Reset "Not Hit" for the hit number
         } else {
-            notClickedCounts[i] = 0;
+            // Increment streak and "Not Hit" for numbers not hit
+            streakTrackers[i]++;
+            notClickedCounts[i]++;
+
+            // Update milestones
+            Object.keys(milestoneCounts).forEach((milestone) => {
+                const milestoneValue = parseInt(milestone, 10);
+                if (streakTrackers[i] === milestoneValue) {
+                    milestoneCounts[milestone][i]++; // Increment milestone count
+
+                    // Remove from lower milestones
+                    Object.keys(milestoneCounts).forEach((lowerMilestone) => {
+                        const lowerValue = parseInt(lowerMilestone, 10);
+                        if (lowerValue < milestoneValue) {
+                            milestoneCounts[lowerMilestone][i] = 0; // Reset lower milestone counts
+                        }
+                    });
+                }
+            });
         }
     }
 
     saveToLocalStorage();
-    updateHitTable();
+    updateHitTable(); // Refresh the table display
+}
+
+function updateStreakColumn() {
+    const selectedMilestone = parseInt(document.getElementById('streakSelector').value, 10);
+
+    const hitTableBody = document.querySelector('#hitTable tbody');
+    Array.from(hitTableBody.rows).forEach((row, i) => {
+        const milestoneCount = milestoneCounts[selectedMilestone][i];
+        row.cells[4].textContent = milestoneCount || 0; // Update the Streaks column
+    });
 }
 
 function undoLastAction() {
     if (actionHistory.length === 0) return;
-    const lastAction = actionHistory.pop();
 
-    if (actionHistory.length === 0) return;
+    const lastAction = actionHistory.pop();
     totalSpins--; // Decrement total spins
 
     if (lastAction.type === 'increment') {
         const number = lastAction.number;
-        counts[number]--;
-        enteredNumbers.pop();
+
+        // Restore the previous state of "Not Hit" counts and streaks
         notClickedCounts = lastAction.previousNotClicked;
-        saveToLocalStorage();
-        updateHitTable();
+        streakTrackers = lastAction.previousStreakTrackers || streakTrackers;
+
+        // Restore the previous milestone counts
+        milestoneCounts = lastAction.previousMilestoneCounts || milestoneCounts;
+
+        counts[number]--; // Decrement the hit count for the undone number
+        enteredNumbers.pop(); // Remove the last entered number
     }
+
+    saveToLocalStorage();
+    updateHitTable(); // Refresh the table display
 }
 
 function saveToLocalStorage() {
@@ -216,6 +286,7 @@ document.getElementById('numberInput').addEventListener('keypress', function (ev
 window.onload = function () {
     initializeTable();
     loadFromLocalStorage();
+    updateHitTable(); // Populate the hit table after the DOM is ready
 
     document.getElementById('darkModeToggle').addEventListener('change', toggleDarkMode);
 
@@ -225,6 +296,16 @@ window.onload = function () {
             <th><button onclick="setSort(1)">Not Hit</button></th>
             <th><button onclick="setSort(2)">Total Hit</button></th>
             <th><button onclick="setSort(3)">Average Ratio</button></th>
+            <th>
+                Streaks:
+                <select id="streakSelector" onchange="updateStreakColumn()">
+                    <option value="100">100</option>
+                    <option value="200">200</option>
+                    <option value="300">300</option>
+                    <option value="400">400</option>
+                    <option value="500">500</option>
+                </select>
+            </th>
         </tr>`;
 };
 

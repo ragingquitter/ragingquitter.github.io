@@ -42,16 +42,19 @@
                         <th><button onclick="setSort(1)">Not Hit</button></th>
                         <th><button onclick="setSort(2)">Total Hit</button></th>
                         <th><button onclick="setSort(3)">Average Ratio</button></th>
+                        <th>
+                            Streaks:
+                            <select id="streakSelector" onchange="updateStreakColumn()">
+                                <option value="100">100</option>
+                                <option value="200">200</option>
+                                <option value="300">300</option>
+                                <option value="400">400</option>
+                                <option value="500">500</option>
+                            </select>
+                        </th>
                     </tr>
                 </thead>
-                <tbody>
-                    <tr>
-                        <td>0</td>
-                        <td>15</td>
-                        <td>5</td>
-                        <td>25%</td>
-                    </tr>
-                </tbody>
+                <tbody></tbody>
             </table>
         </div>
         <div>

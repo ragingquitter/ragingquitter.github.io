@@ -66,6 +66,8 @@ th, td {
 
 th {
     background-color: var(--table-header-color);
+    visibility: visible !important;
+    display: table-cell !important;
 }
 
 .home-container {
