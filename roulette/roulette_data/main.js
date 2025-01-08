@@ -283,7 +283,7 @@ function handleBulkInput() {
         return;
     }
 
-    numbers.reverse().forEach((number) => incrementCountAndRecordHit(number));
+    numbers.forEach((number) => incrementCountAndRecordHit(number));
     totalNumbersHit++;
     bulkInputField.value = ''; // Clear the field after processing
 }
