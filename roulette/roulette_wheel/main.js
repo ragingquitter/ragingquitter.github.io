@@ -63,7 +63,7 @@ function placeBet(type) {
             losses++;
         }
 
-        spinHistory.push(outcome.number);
+        spinHistory.unshift(outcome.number);
     }
 
     totalSpins += spinCount;
