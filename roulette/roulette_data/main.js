@@ -5,7 +5,7 @@ let enteredNumbers = [];
 let actionHistory = [];
 let sortColumn = null;
 let sortAscending = true;
-let totalSpins = 0;
+let totalNumbersHit = 0;
 let streakTrackers = Array.from({ length: totalPockets }, () => 0); // Tracks current streaks
 let milestoneCounts = {
     100: Array.from({ length: totalPockets }, () => 0),
@@ -27,7 +27,7 @@ function updateHitTable() {
     const selectedMilestone = parseInt(document.getElementById('streakSelector').value, 10);
 
     for (let i = 0; i < totalPockets; i++) {
-        const probability = totalSpins > 0 ? ((counts[i] / totalSpins) * 100).toFixed(2) : 0;
+        const probability = totalNumbersHit > 0 ? ((counts[i] / totalNumbersHit) * 100).toFixed(2) : 0;
 
         // Add a new row for each number
         hitTableBody.innerHTML += `
@@ -57,24 +57,33 @@ function updateHitTable() {
     }
 
     // Update total spins display
-    document.getElementById('totalSpins').textContent = totalSpins;
+    document.getElementById('totalNumbersHit').textContent = totalNumbersHit;
 }
 
 function resetAll() {
     counts.fill(0);
     notClickedCounts.fill(0);
     streakTrackers.fill(0);
+    localStorage.setItem('counts', JSON.stringify(counts));
+    localStorage.setItem('notClickedCounts', JSON.stringify(notClickedCounts));
+    localStorage.setItem('streakTrackers', JSON.stringify(streakTrackers));
+
     Object.keys(milestoneCounts).forEach((milestone) => {
         milestoneCounts[milestone].fill(0);
     });
 
-    totalSpins = 0;
+    totalNumbersHit = 0;
     enteredNumbers = [];
     actionHistory = [];
     sortColumn = null;
     sortAscending = true;
 
-    localStorage.clear();
+    localStorage.setItem('totalNumbersHit', totalNumbersHit);
+    localStorage.setItem('enteredNumbers', JSON.stringify(enteredNumbers));
+    localStorage.setItem('actionHistory', JSON.stringify(actionHistory));
+    localStorage.setItem('milestoneCounts', JSON.stringify(milestoneCounts));
+
+    console.log(localStorage);
 
     // Reset dropdown to default value (100)
     document.getElementById('streakSelector').value = '100';
@@ -84,7 +93,7 @@ function resetAll() {
 
 function incrementCountAndRecordHit(number) {
     counts[number]++; // Increment the hit count for the clicked number
-    totalSpins++; // Increment total spins
+    totalNumbersHit++; // Increment total spins
     enteredNumbers.push(number); // Track the entered number
 
     // Save current state for undo
@@ -143,7 +152,7 @@ function undoLastAction() {
     if (actionHistory.length === 0) return;
 
     const lastAction = actionHistory.pop();
-    totalSpins--; // Decrement total spins
+    totalNumbersHit--; // Decrement total spins
 
     if (lastAction.type === 'increment') {
         const number = lastAction.number;
@@ -169,7 +178,8 @@ function saveToLocalStorage() {
     localStorage.setItem('enteredNumbers', JSON.stringify(enteredNumbers));
     localStorage.setItem('actionHistory', JSON.stringify(actionHistory));
     localStorage.setItem('darkMode', document.body.classList.contains('dark-mode'));
-    localStorage.setItem('totalSpins', totalSpins);
+    localStorage.setItem('totalNumbersHit', totalNumbersHit);
+    localStorage.setItem('milestoneCounts', JSON.stringify(milestoneCounts));
 }
 
 function loadFromLocalStorage() {
@@ -178,12 +188,14 @@ function loadFromLocalStorage() {
     const savedEnteredNumbers = localStorage.getItem('enteredNumbers');
     const savedActionHistory = localStorage.getItem('actionHistory');
     const savedDarkMode = localStorage.getItem('darkMode');
-    const savedTotalSpins = localStorage.getItem('totalSpins');
+    const savedtotalNumbersHit = localStorage.getItem('totalNumbersHit');
+    const savedMilestoneCounts = localStorage.getItem('milestoneCounts');
 
     if (savedCounts) counts = JSON.parse(savedCounts);
     if (savedNotClickedCounts) notClickedCounts = JSON.parse(savedNotClickedCounts);
     if (savedEnteredNumbers) enteredNumbers = JSON.parse(savedEnteredNumbers);
     if (savedActionHistory) actionHistory = JSON.parse(savedActionHistory);
+    if (savedMilestoneCounts) milestoneCounts = JSON.parse(savedMilestoneCounts);
     if (savedDarkMode === 'true') {
         document.body.classList.add('dark-mode');
         document.getElementById('darkModeToggle').checked = true;
@@ -191,7 +203,7 @@ function loadFromLocalStorage() {
         document.body.classList.remove('dark-mode');
         document.getElementById('darkModeToggle').checked = false;
     }
-    if (savedTotalSpins) totalSpins = parseInt(savedTotalSpins, 10) || 0;
+    if (savedtotalNumbersHit) totalNumbersHit = parseInt(savedtotalNumbersHit, 10) || 0;
 
     updateHitTable();
 }
@@ -272,7 +284,7 @@ function handleBulkInput() {
     }
 
     numbers.reverse().forEach((number) => incrementCountAndRecordHit(number));
-    totalSpins++;
+    totalNumbersHit++;
     bulkInputField.value = ''; // Clear the field after processing
 }
 

@@ -1,6 +1,7 @@
 let balance = localStorage.getItem('rouletteBalance') !== null
     ? parseInt(localStorage.getItem('rouletteBalance'))
     : 5000;
+    
 let spinHistory = JSON.parse(localStorage.getItem('rouletteHistory')) || [];
 let totalSpins = localStorage.getItem('totalSpins') !== null
     ? parseInt(localStorage.getItem('totalSpins'))
