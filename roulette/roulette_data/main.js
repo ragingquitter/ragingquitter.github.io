@@ -1,7 +1,7 @@
 const totalPockets = 37;
 let counts = Array.from({ length: totalPockets }, () => 0);
 let notClickedCounts = Array.from({ length: totalPockets }, () => 0);
-let enteredNumbers = [];
+// let enteredNumbers = [];
 let actionHistory = [];
 let sortColumn = null;
 let sortAscending = true;
@@ -73,13 +73,13 @@ function resetAll() {
     });
 
     totalNumbersHit = 0;
-    enteredNumbers = [];
+    // enteredNumbers = [];
     actionHistory = [];
     sortColumn = null;
     sortAscending = true;
 
     localStorage.setItem('totalNumbersHit', totalNumbersHit);
-    localStorage.setItem('enteredNumbers', JSON.stringify(enteredNumbers));
+    // localStorage.setItem('enteredNumbers', JSON.stringify(enteredNumbers));
     localStorage.setItem('actionHistory', JSON.stringify(actionHistory));
     localStorage.setItem('milestoneCounts', JSON.stringify(milestoneCounts));
 
@@ -94,7 +94,6 @@ function resetAll() {
 function incrementCountAndRecordHit(number) {
     counts[number]++; // Increment the hit count for the clicked number
     totalNumbersHit++; // Increment total spins
-    enteredNumbers.push(number); // Track the entered number
 
     // Save current state for undo
     actionHistory.push({
@@ -105,14 +104,17 @@ function incrementCountAndRecordHit(number) {
         previousMilestoneCounts: JSON.parse(JSON.stringify(milestoneCounts)), // Deep copy milestone counts
     });
 
+    // Limit undo history to the last 5 actions
+    if (actionHistory.length > 5) {
+        actionHistory.shift();
+    }
+
     // Update "Not Hit" and streak logic
     for (let i = 0; i < totalPockets; i++) {
         if (i === number) {
-            // Reset streak for the hit number
-            streakTrackers[i] = 0;
+            streakTrackers[i] = 0; // Reset streak for the hit number
             notClickedCounts[i] = 0; // Reset "Not Hit" for the hit number
         } else {
-            // Increment streak and "Not Hit" for numbers not hit
             streakTrackers[i]++;
             notClickedCounts[i]++;
 
@@ -120,13 +122,11 @@ function incrementCountAndRecordHit(number) {
             Object.keys(milestoneCounts).forEach((milestone) => {
                 const milestoneValue = parseInt(milestone, 10);
                 if (streakTrackers[i] === milestoneValue) {
-                    milestoneCounts[milestone][i]++; // Increment milestone count
-
-                    // Remove from lower milestones
+                    milestoneCounts[milestone][i]++;
                     Object.keys(milestoneCounts).forEach((lowerMilestone) => {
                         const lowerValue = parseInt(lowerMilestone, 10);
                         if (lowerValue < milestoneValue) {
-                            milestoneCounts[lowerMilestone][i] = 0; // Reset lower milestone counts
+                            milestoneCounts[lowerMilestone][i] = 0;
                         }
                     });
                 }
@@ -135,7 +135,7 @@ function incrementCountAndRecordHit(number) {
     }
 
     saveToLocalStorage();
-    updateHitTable(); // Refresh the table display
+    updateHitTable();
 }
 
 function updateStreakColumn() {
@@ -165,17 +165,16 @@ function undoLastAction() {
         milestoneCounts = lastAction.previousMilestoneCounts || milestoneCounts;
 
         counts[number]--; // Decrement the hit count for the undone number
-        enteredNumbers.pop(); // Remove the last entered number
     }
 
     saveToLocalStorage();
-    updateHitTable(); // Refresh the table display
+    updateHitTable();
 }
 
 function saveToLocalStorage() {
     localStorage.setItem('counts', JSON.stringify(counts));
     localStorage.setItem('notClickedCounts', JSON.stringify(notClickedCounts));
-    localStorage.setItem('enteredNumbers', JSON.stringify(enteredNumbers));
+    // localStorage.setItem('enteredNumbers', JSON.stringify(enteredNumbers));
     localStorage.setItem('actionHistory', JSON.stringify(actionHistory));
     localStorage.setItem('darkMode', document.body.classList.contains('dark-mode'));
     localStorage.setItem('totalNumbersHit', totalNumbersHit);
@@ -185,7 +184,7 @@ function saveToLocalStorage() {
 function loadFromLocalStorage() {
     const savedCounts = localStorage.getItem('counts');
     const savedNotClickedCounts = localStorage.getItem('notClickedCounts');
-    const savedEnteredNumbers = localStorage.getItem('enteredNumbers');
+    // const savedEnteredNumbers = localStorage.getItem('enteredNumbers');
     const savedActionHistory = localStorage.getItem('actionHistory');
     const savedDarkMode = localStorage.getItem('darkMode');
     const savedtotalNumbersHit = localStorage.getItem('totalNumbersHit');
@@ -193,7 +192,7 @@ function loadFromLocalStorage() {
 
     if (savedCounts) counts = JSON.parse(savedCounts);
     if (savedNotClickedCounts) notClickedCounts = JSON.parse(savedNotClickedCounts);
-    if (savedEnteredNumbers) enteredNumbers = JSON.parse(savedEnteredNumbers);
+    // if (savedEnteredNumbers) enteredNumbers = JSON.parse(savedEnteredNumbers);
     if (savedActionHistory) actionHistory = JSON.parse(savedActionHistory);
     if (savedMilestoneCounts) milestoneCounts = JSON.parse(savedMilestoneCounts);
     if (savedDarkMode === 'true') {
@@ -283,17 +282,24 @@ function handleBulkInput() {
         return;
     }
 
-    numbers.forEach((number) => incrementCountAndRecordHit(number));
-    totalNumbersHit++;
-    bulkInputField.value = ''; // Clear the field after processing
-}
+    // Process numbers in chunks
+    const chunkSize = 100; // Process 100 numbers at a time
+    let index = 0;
 
-document.getElementById('numberInput').addEventListener('keypress', function (event) {
-    if (event.key === 'Enter') {
-        event.preventDefault();
-        handleNumberInput();
+    function processChunk() {
+        const chunk = numbers.slice(index, index + chunkSize);
+        chunk.forEach((number) => incrementCountAndRecordHit(number));
+
+        index += chunkSize;
+        if (index < numbers.length) {
+            setTimeout(processChunk, 0); // Process the next chunk asynchronously
+        } else {
+            bulkInputField.value = ''; // Clear the input field
+        }
     }
-});
+
+    processChunk();
+}
 
 window.onload = function () {
     initializeTable();
