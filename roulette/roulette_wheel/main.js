@@ -63,7 +63,7 @@ function placeBet(type) {
             losses++;
         }
 
-        spinHistory.unshift(outcome.number);
+        spinHistory.push(outcome.number);
     }
 
     totalSpins += spinCount;
@@ -109,6 +109,12 @@ function resetGame() {
     document.getElementById('bet-amount').value = 100;
     document.getElementById('spin-count').value = 1;
     document.getElementById('bet-number').value = '';
+    updateHistoryBox();
+}
+
+function resetHistory() {
+    spinHistory = [];
+    localStorage.setItem('rouletteHistory', JSON.stringify(spinHistory));
     updateHistoryBox();
 }
 
