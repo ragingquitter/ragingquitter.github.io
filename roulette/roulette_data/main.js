@@ -2,7 +2,7 @@ const totalPockets = 37;
 let counts = Array.from({ length: totalPockets }, () => 0);
 let notClickedCounts = Array.from({ length: totalPockets }, () => 0);
 // let enteredNumbers = [];
-let actionHistory = [];
+// let actionHistory = [];
 let sortColumn = null;
 let sortAscending = true;
 let totalNumbersHit = 0;
@@ -74,13 +74,13 @@ function resetAll() {
 
     totalNumbersHit = 0;
     // enteredNumbers = [];
-    actionHistory = [];
+    // actionHistory = [];
     sortColumn = null;
     sortAscending = true;
 
     localStorage.setItem('totalNumbersHit', totalNumbersHit);
     // localStorage.setItem('enteredNumbers', JSON.stringify(enteredNumbers));
-    localStorage.setItem('actionHistory', JSON.stringify(actionHistory));
+    // localStorage.setItem('actionHistory', JSON.stringify(actionHistory));
     localStorage.setItem('milestoneCounts', JSON.stringify(milestoneCounts));
 
     console.log(localStorage);
@@ -92,50 +92,51 @@ function resetAll() {
 }
 
 function incrementCountAndRecordHit(number) {
-    counts[number]++; // Increment the hit count for the clicked number
-    totalNumbersHit++; // Increment total spins
+    counts[number]++;
+    totalNumbersHit++;
 
-    // Save current state for undo
-    actionHistory.push({
-        number,
-        type: 'increment',
-        previousNotClicked: [...notClickedCounts],
-        previousStreakTrackers: [...streakTrackers], // Save the current streaks
-        previousMilestoneCounts: JSON.parse(JSON.stringify(milestoneCounts)), // Deep copy milestone counts
-    });
-
-    // Limit undo history to the last 5 actions
-    if (actionHistory.length > 5) {
-        actionHistory.shift();
-    }
-
-    // Update "Not Hit" and streak logic
     for (let i = 0; i < totalPockets; i++) {
         if (i === number) {
-            streakTrackers[i] = 0; // Reset streak for the hit number
-            notClickedCounts[i] = 0; // Reset "Not Hit" for the hit number
+            // Reset streak for the hit number
+            streakTrackers[i] = 0;
+            notClickedCounts[i] = 0;
         } else {
+            // Increment streak for numbers not hit
             streakTrackers[i]++;
             notClickedCounts[i]++;
 
-            // Update milestones
-            Object.keys(milestoneCounts).forEach((milestone) => {
-                const milestoneValue = parseInt(milestone, 10);
-                if (streakTrackers[i] === milestoneValue) {
-                    milestoneCounts[milestone][i]++;
-                    Object.keys(milestoneCounts).forEach((lowerMilestone) => {
-                        const lowerValue = parseInt(lowerMilestone, 10);
-                        if (lowerValue < milestoneValue) {
-                            milestoneCounts[lowerMilestone][i] = 0;
-                        }
-                    });
+            // Find the current and previous milestones
+            let currentMilestone = null;
+            let previousMilestone = null;
+
+            Object.keys(milestoneCounts)
+                .map((m) => parseInt(m, 10)) // Convert milestone keys to numbers
+                .sort((a, b) => a - b) // Sort milestones in ascending order
+                .forEach((milestoneValue) => {
+                    if (streakTrackers[i] === milestoneValue) {
+                        currentMilestone = milestoneValue;
+                    } else if (streakTrackers[i] > milestoneValue) {
+                        previousMilestone = milestoneValue;
+                    }
+                });
+
+            // Increment the current milestone count
+            if (currentMilestone !== null) {
+                milestoneCounts[currentMilestone][i]++;
+
+                // Decrement the previous milestone count (if applicable)
+                if (previousMilestone !== null) {
+                    milestoneCounts[previousMilestone][i] = Math.max(
+                        0,
+                        milestoneCounts[previousMilestone][i] - 1
+                    );
                 }
-            });
+            }
         }
     }
 
     saveToLocalStorage();
-    updateHitTable();
+    updateHitTable(); // Refresh the table display
 }
 
 function updateStreakColumn() {
@@ -148,34 +149,34 @@ function updateStreakColumn() {
     });
 }
 
-function undoLastAction() {
-    if (actionHistory.length === 0) return;
+// function undoLastAction() {
+//     if (actionHistory.length === 0) return;
 
-    const lastAction = actionHistory.pop();
-    totalNumbersHit--; // Decrement total spins
+//     const lastAction = actionHistory.pop();
+//     totalNumbersHit--; // Decrement total spins
 
-    if (lastAction.type === 'increment') {
-        const number = lastAction.number;
+//     if (lastAction.type === 'increment') {
+//         const number = lastAction.number;
 
-        // Restore the previous state of "Not Hit" counts and streaks
-        notClickedCounts = lastAction.previousNotClicked;
-        streakTrackers = lastAction.previousStreakTrackers || streakTrackers;
+//         // Restore the previous state of "Not Hit" counts and streaks
+//         notClickedCounts = lastAction.previousNotClicked;
+//         streakTrackers = lastAction.previousStreakTrackers;
 
-        // Restore the previous milestone counts
-        milestoneCounts = lastAction.previousMilestoneCounts || milestoneCounts;
+//         // Restore the previous milestone counts
+//         milestoneCounts = JSON.parse(JSON.stringify(lastAction.previousMilestoneCounts));
 
-        counts[number]--; // Decrement the hit count for the undone number
-    }
+//         counts[number]--; // Decrement the hit count for the undone number
+//     }
 
-    saveToLocalStorage();
-    updateHitTable();
-}
+//     saveToLocalStorage();
+//     updateHitTable(); // Refresh the table display
+// }
 
 function saveToLocalStorage() {
     localStorage.setItem('counts', JSON.stringify(counts));
     localStorage.setItem('notClickedCounts', JSON.stringify(notClickedCounts));
     // localStorage.setItem('enteredNumbers', JSON.stringify(enteredNumbers));
-    localStorage.setItem('actionHistory', JSON.stringify(actionHistory));
+    // localStorage.setItem('actionHistory', JSON.stringify(actionHistory));
     localStorage.setItem('darkMode', document.body.classList.contains('dark-mode'));
     localStorage.setItem('totalNumbersHit', totalNumbersHit);
     localStorage.setItem('milestoneCounts', JSON.stringify(milestoneCounts));
@@ -185,7 +186,7 @@ function loadFromLocalStorage() {
     const savedCounts = localStorage.getItem('counts');
     const savedNotClickedCounts = localStorage.getItem('notClickedCounts');
     // const savedEnteredNumbers = localStorage.getItem('enteredNumbers');
-    const savedActionHistory = localStorage.getItem('actionHistory');
+    // const savedActionHistory = localStorage.getItem('actionHistory');
     const savedDarkMode = localStorage.getItem('darkMode');
     const savedtotalNumbersHit = localStorage.getItem('totalNumbersHit');
     const savedMilestoneCounts = localStorage.getItem('milestoneCounts');
@@ -193,7 +194,7 @@ function loadFromLocalStorage() {
     if (savedCounts) counts = JSON.parse(savedCounts);
     if (savedNotClickedCounts) notClickedCounts = JSON.parse(savedNotClickedCounts);
     // if (savedEnteredNumbers) enteredNumbers = JSON.parse(savedEnteredNumbers);
-    if (savedActionHistory) actionHistory = JSON.parse(savedActionHistory);
+    // if (savedActionHistory) actionHistory = JSON.parse(savedActionHistory);
     if (savedMilestoneCounts) milestoneCounts = JSON.parse(savedMilestoneCounts);
     if (savedDarkMode === 'true') {
         document.body.classList.add('dark-mode');
