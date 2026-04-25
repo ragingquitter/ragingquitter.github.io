@@ -1,0 +1,31 @@
+# Dependencies
+node_modules/
+
+# Environment variables
+.env
+.env.*
+!.env.example
+
+# Database
+data/*
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# Runtime
+pids
+*.pid
+*.pid.lock
+
+# OS files
+Thumbs.db
+.DS_Store
+
+# IDE
+.vscode/
+.idea/
+
+# Claude
+.claude/*

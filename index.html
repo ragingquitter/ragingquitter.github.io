@@ -3,21 +3,58 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Audiowide&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
-    <title>Ragings Home Page</title>
+    <title>Raging's Project Hub</title>
 </head>
 <body>
-    <div class="main">
-        <h1>Ragings Website Projects</h1>
-        <div class="card">
-            <div class="header">
-                <p>Roulette</p>
-            </div>
-            <div class="container">
-                <a href="roulette/roulette_data/index.html" class="button" style="text-decoration: none">SPIN TRACKER</a>
-                <a href="roulette/roulette_wheel/index.html" class="button" style="text-decoration: none">ROULETTE WHEEL</a>
-            </div>
+    <nav class="top-nav">
+        <a href="index.html" class="nav-brand">&#127968; Raging's Hub</a>
+        <div class="nav-links">
+            <a href="index.html" class="nav-link active">Home</a>
+            <a href="roulette-simulator/index.html" class="nav-link">Roulette Simulator</a>
         </div>
-    </div>
+    </nav>
+
+    <header class="site-header">
+        <h1>Raging's Project Hub</h1>
+        <p class="tagline">A collection of things I'm building &mdash; click a card to dive in.</p>
+    </header>
+
+    <main class="card-grid">
+        <article class="card">
+            <div class="card-header simulator">
+                <span class="card-icon">&#127920;</span>
+                <h2>Roulette Simulator</h2>
+            </div>
+            <div class="card-body">
+                <p>Place bets, spin the wheel, and test betting strategies with bulk simulations.</p>
+                <div class="card-links">
+                    <a href="roulette-simulator/index.html" class="button">Open Simulator</a>
+                </div>
+            </div>
+        </article>
+
+        <article class="card coming-soon">
+            <div class="card-header soon">
+                <span class="card-icon">&#10024;</span>
+                <h2>More Coming Soon</h2>
+            </div>
+            <div class="card-body">
+                <p>New experiments are in the workshop. Check back later!</p>
+                <div class="card-links">
+                    <span class="button disabled">Stay Tuned</span>
+                </div>
+            </div>
+        </article>
+    </main>
+
+    <footer class="site-footer">
+        <p>&copy; <span id="year"></span> ragingquitter &middot; <a href="https://github.com/">Powered By GitHub</a></p>
+    </footer>
+
+    <script src="script.js" defer></script>
 </body>
 </html>

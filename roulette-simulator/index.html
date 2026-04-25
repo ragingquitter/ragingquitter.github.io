@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Free Roulette Simulator</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div id="shell">
+
+<!-- HEADER -->
+<div id="header">
+  <a href="../index.html" id="logo" style="text-decoration:none">&#127968; Raging's Hub</a>
+  <div id="nav-tabs">
+    <a href="../index.html" class="tab-btn" style="text-decoration:none;display:inline-block">&larr; Home</a>
+    <button class="tab-btn active" onclick="showPanel('play')">Play</button>
+    <button class="tab-btn" onclick="showPanel('strategy')">Strategy Modes</button>
+    <button class="tab-btn" onclick="showPanel('payouts')">Payouts</button>
+    <button class="tab-btn" onclick="showPanel('settings')">Settings</button>
+  </div>
+</div>
+
+<div id="content">
+
+<!-- ═══════════ PLAY PANEL ═══════════ -->
+<div id="panel-play" class="panel active">
+
+  <div id="top-bar">
+    <div class="info-card"><div class="lbl">Balance</div><div class="val" id="bal">$1,000</div></div>
+    <div class="info-card"><div class="lbl">Current Bet</div><div class="val" id="curbet">$0</div></div>
+    <div class="info-card"><div class="lbl">Spins</div><div class="val" id="spins">0</div></div>
+    <div class="info-card"><div class="lbl">Net P&L</div><div class="val" id="netpnl">$0</div></div>
+  </div>
+
+  <div id="result-banner">Select chips below, click the table to place bets, then spin!</div>
+
+  <div id="game-area">
+    <div id="wheel-col">
+      <canvas id="wheel-canvas" width="190" height="190"></canvas>
+      <div id="ball-result">—</div>
+      <div id="wheel-type-lbl">European · 37 pockets · 2.70% edge</div>
+    </div>
+    <div id="table-col">
+      <div id="bet-table-wrap">
+        <div id="zero-col"></div>
+        <div id="num-and-outside">
+          <div id="num-grid"></div>
+          <div id="col-row"></div>
+          <div id="outside-rows"></div>
+        </div>
+      </div>
+      <div style="font-size:11px;color:var(--text3)">Right-click any bet to remove it · Tip: bet on multiple spots at once</div>
+      <div id="chip-row"></div>
+      <div id="ctrl-row">
+        <button class="ctrl-btn" id="spin-btn" onclick="spin()">▶ Spin</button>
+        <button class="ctrl-btn" onclick="doRebet()">↺ Rebet</button>
+        <button class="ctrl-btn" onclick="doDouble()">2× Double</button>
+        <button class="ctrl-btn" onclick="doUndo()">↩ Undo</button>
+        <button class="ctrl-btn" onclick="doClear()">✕ Clear</button>
+        <button class="ctrl-btn" onclick="if(confirm('Reset game to starting balance?'))resetGame()">⟳ Reset</button>
+      </div>
+    </div>
+  </div>
+
+  <div style="font-size:11px;color:var(--text3)">Recent spins:</div>
+  <div id="history-row"></div>
+
+  <div id="stats-grid">
+    <div class="stat-box"><div class="sl">Total Wagered</div><div class="sv" id="s-wag">$0</div></div>
+    <div class="stat-box"><div class="sl">Total Returned</div><div class="sv" id="s-ret">$0</div></div>
+    <div class="stat-box"><div class="sl">Biggest Win</div><div class="sv" id="s-bw" style="color:var(--win)">$0</div></div>
+    <div class="stat-box"><div class="sl">Biggest Loss</div><div class="sv" id="s-bl" style="color:var(--lose)">$0</div></div>
+    <div class="stat-box"><div class="sl">Red / Black</div><div class="sv" id="s-rb">0 / 0</div></div>
+    <div class="stat-box"><div class="sl">Zeros Hit</div><div class="sv" id="s-z">0</div></div>
+    <div class="stat-box"><div class="sl">Win Rate</div><div class="sv" id="s-wr">—</div></div>
+    <div class="stat-box"><div class="sl">Best Streak</div><div class="sv" id="s-str">—</div></div>
+  </div>
+</div>
+
+<!-- ═══════════ STRATEGY PANEL ═══════════ -->
+<div id="panel-strategy" class="panel">
+  <div class="strat-pick">
+    <button class="strat-btn active" onclick="pickStrat('martingale',this)">Martingale</button>
+    <button class="strat-btn" onclick="pickStrat('paroli',this)">Paroli</button>
+    <button class="strat-btn" onclick="pickStrat('dalembert',this)">D'Alembert</button>
+    <button class="strat-btn" onclick="pickStrat('fibonacci',this)">Fibonacci</button>
+    <button class="strat-btn" onclick="pickStrat('labouchere',this)">Labouchere</button>
+    <button class="strat-btn" onclick="pickStrat('jamesbond',this)">James Bond</button>
+  </div>
+
+  <div class="strat-card">
+    <h3 id="strat-name">Martingale</h3>
+    <div id="strat-desc"></div>
+  </div>
+
+  <div class="strat-card">
+    <h3>Configuration</h3>
+    <div class="cfg-grid" id="strat-config"></div>
+  </div>
+
+  <div class="strat-card">
+    <h3>Simulation</h3>
+    <div id="strat-game-area">
+      <div id="strat-wheel-col">
+        <canvas id="strat-canvas" width="150" height="150"></canvas>
+        <div id="strat-num">—</div>
+        <div style="font-size:10px;color:var(--text3);text-align:center" id="strat-wheel-lbl">European</div>
+      </div>
+      <div id="strat-info">
+        <div class="ss-grid">
+          <div class="ss-box"><div class="ssl">Balance</div><div class="ssv" id="ss-bal">—</div></div>
+          <div class="ss-box"><div class="ssl">Round</div><div class="ssv" id="ss-rnd">0</div></div>
+          <div class="ss-box"><div class="ssl">Net P&L</div><div class="ssv" id="ss-net">$0</div></div>
+          <div class="ss-box"><div class="ssl">Next Bet</div><div class="ssv" id="ss-bet">—</div></div>
+          <div class="ss-box"><div class="ssl">Peak</div><div class="ssv" id="ss-peak">—</div></div>
+          <div class="ss-box"><div class="ssl">Trough</div><div class="ssv" id="ss-low">—</div></div>
+        </div>
+        <div id="strat-log"><span style="color:var(--text3)">Press Spin Once or Auto-Run to start...</span></div>
+      </div>
+    </div>
+    <div class="strat-ctrl">
+      <button class="ctrl-btn" id="ss-spin" onclick="stratSpin()">▶ Spin Once</button>
+      <button class="ctrl-btn" id="ss-auto" onclick="toggleAuto()">⏩ Auto-Run</button>
+      <button class="ctrl-btn" onclick="stratReset()">⟳ Reset</button>
+    </div>
+
+    <!-- BULK SPIN -->
+    <div style="margin-top:10px;border-top:1px solid var(--border);padding-top:12px">
+      <div style="font-size:12px;color:var(--gold);font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px">⚡ Bulk Simulation</div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px">
+        <div style="display:flex;flex-direction:column;gap:3px">
+          <label style="font-size:11px;color:var(--text3)">Number of spins</label>
+          <input id="bulk-count" type="number" value="200" min="1" max="100000"
+            style="background:var(--bg3);border:1px solid var(--border);border-radius:4px;color:var(--text);padding:6px 10px;font-size:13px;width:110px">
+        </div>
+        <div style="display:flex;flex-direction:column;gap:3px">
+          <label style="font-size:11px;color:var(--text3)">Repeat runs</label>
+          <input id="bulk-runs" type="number" value="1" min="1" max="20"
+            style="background:var(--bg3);border:1px solid var(--border);border-radius:4px;color:var(--text);padding:6px 10px;font-size:13px;width:80px">
+        </div>
+        <div style="display:flex;flex-direction:column;gap:3px;margin-top:auto">
+          <label style="font-size:11px;color:transparent">go</label>
+          <div style="display:flex;gap:6px">
+            <button class="ctrl-btn" id="bulk-btn" onclick="runBulk()"
+              style="background:linear-gradient(135deg,#4a1080,#7b2fbe);border-color:#9b59b6;color:#fff;font-weight:700;white-space:nowrap">⚡ Run Bulk</button>
+            <button class="ctrl-btn" onclick="clearBulkChart()" style="white-space:nowrap">✕ Clear Chart</button>
+          </div>
+        </div>
+        <div id="bulk-progress" style="font-size:12px;color:var(--text3);margin-top:auto;padding-bottom:7px"></div>
+      </div>
+      <!-- speed presets -->
+      <div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:10px;align-items:center">
+        <span style="font-size:11px;color:var(--text3)">Quick presets:</span>
+        <button class="amt" onclick="setBulkPreset(100,1)">100 spins</button>
+        <button class="amt" onclick="setBulkPreset(500,1)">500 spins</button>
+        <button class="amt" onclick="setBulkPreset(1000,1)">1,000 spins</button>
+        <button class="amt" onclick="setBulkPreset(5000,1)">5,000 spins</button>
+        <button class="amt" onclick="setBulkPreset(1000,5)">1K × 5 runs</button>
+        <button class="amt" onclick="setBulkPreset(1000,10)">1K × 10 runs</button>
+      </div>
+      <!-- chart -->
+      <canvas id="bulk-chart" width="800" height="200"
+        style="width:100%;height:200px;background:rgba(8,0,26,0.7);border-radius:var(--radius);border:1px solid var(--border);display:block"></canvas>
+      <!-- summary -->
+      <div id="bulk-summary" style="margin-top:10px;display:none">
+        <div style="font-size:12px;color:var(--gold);font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Run Summary</div>
+        <div id="bulk-summary-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:6px"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ PAYOUTS PANEL ═══════════ -->
+<div id="panel-payouts" class="panel">
+  <div class="strat-card">
+    <h3>Bet Types & Payouts</h3>
+    <table id="payout-table">
+      <thead><tr><th>Bet</th><th>Numbers Covered</th><th>Payout</th><th>Win Probability (EU)</th></tr></thead>
+      <tbody>
+        <tr><td><b>Straight Up</b> — single number</td><td>1</td><td><span class="badge b-gld">35:1</span></td><td>2.70%</td></tr>
+        <tr><td><b>Split</b> — two adjacent numbers</td><td>2</td><td><span class="badge b-gld">17:1</span></td><td>5.41%</td></tr>
+        <tr><td><b>Street</b> — row of 3</td><td>3</td><td><span class="badge b-gld">11:1</span></td><td>8.11%</td></tr>
+        <tr><td><b>Corner</b> — four numbers</td><td>4</td><td><span class="badge b-gld">8:1</span></td><td>10.81%</td></tr>
+        <tr><td><b>Six Line</b> — two rows (6 numbers)</td><td>6</td><td><span class="badge b-gld">5:1</span></td><td>16.22%</td></tr>
+        <tr><td><b>Column</b> — 12 numbers (2:1 columns)</td><td>12</td><td><span class="badge b-grn">2:1</span></td><td>32.43%</td></tr>
+        <tr><td><b>Dozen</b> — 1st/2nd/3rd 12</td><td>12</td><td><span class="badge b-grn">2:1</span></td><td>32.43%</td></tr>
+        <tr><td><b>Red / Black</b></td><td>18</td><td><span class="badge b-red">1:1</span></td><td>48.65%</td></tr>
+        <tr><td><b>Odd / Even</b></td><td>18</td><td><span class="badge b-red">1:1</span></td><td>48.65%</td></tr>
+        <tr><td><b>Low (1–18) / High (19–36)</b></td><td>18</td><td><span class="badge b-red">1:1</span></td><td>48.65%</td></tr>
+        <tr><td><b>Zero (0)</b></td><td>1</td><td><span class="badge b-gld">35:1</span></td><td>2.70%</td></tr>
+        <tr><td><b>Double Zero (00)</b> — American only</td><td>1</td><td><span class="badge b-gld">35:1</span></td><td>2.63%</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="strat-card">
+    <h3>House Edge Explained</h3>
+    <p style="font-size:13px;color:var(--text2);line-height:1.7">
+      The house edge comes from the zero pocket. On a European wheel, zero gives the casino its 2.70% edge — for every $100 bet, you statistically lose $2.70 over time. American roulette adds a double zero (00), nearly doubling the edge to 5.26%. The payouts are identical on both wheels, so European is always the mathematically better choice. No betting strategy changes the long-term house edge — it's a mathematical constant built into the wheel itself.
+    </p>
+  </div>
+</div>
+
+<!-- ═══════════ SETTINGS PANEL ═══════════ -->
+<div id="panel-settings" class="panel">
+  <div id="settings-area">
+    <div class="set-card">
+      <h3>Wheel Type</h3>
+      <div class="set-row">
+        <label>Roulette variant</label>
+        <div class="tog-grp">
+          <button class="tog on" id="sw-eu" onclick="setCfg('wheel','european',this,'sw-eu','sw-am')">European (0)</button>
+          <button class="tog" id="sw-am" onclick="setCfg('wheel','american',this,'sw-am','sw-eu')">American (0+00)</button>
+        </div>
+      </div>
+    </div>
+    <div class="set-card">
+      <h3>Starting Balance</h3>
+      <div class="set-row">
+        <label>Amount at reset</label>
+        <div class="amt-opts">
+          <button class="amt" onclick="setAmt(100,this)">$100</button>
+          <button class="amt" onclick="setAmt(500,this)">$500</button>
+          <button class="amt on" id="amt-def" onclick="setAmt(1000,this)">$1,000</button>
+          <button class="amt" onclick="setAmt(5000,this)">$5,000</button>
+          <button class="amt" onclick="setAmt(10000,this)">$10,000</button>
+          <button class="amt" onclick="setAmt(Infinity,this)">Unlimited ∞</button>
+        </div>
+      </div>
+    </div>
+    <div class="set-card">
+      <h3>Bet Limits</h3>
+      <div class="set-row">
+        <label>Realistic casino limits<br><span style="font-size:11px;color:var(--text3)">Singles: $250 max · Even chances: $10,000 max</span></label>
+        <div class="tog-grp">
+          <button class="tog" id="sl-on" onclick="setCfg('betLimits',true,this,'sl-on','sl-off')">On</button>
+          <button class="tog on" id="sl-off" onclick="setCfg('betLimits',false,this,'sl-off','sl-on')">Off</button>
+        </div>
+      </div>
+    </div>
+    <div class="set-card">
+      <h3>Chip Denominations</h3>
+      <div style="font-size:13px;color:var(--text2)">Available chips: $1 · $5 · $25 · $100 · $500 · $1,000</div>
+    </div>
+    <button id="apply-settings" onclick="applySettings()">Apply Settings & Reset Game</button>
+  </div>
+</div>
+
+</div><!-- /content -->
+</div><!-- /shell -->
+<script src="script.js" defer></script>
+</body>
+</html>
