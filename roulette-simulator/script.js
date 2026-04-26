@@ -381,6 +381,11 @@ const STRAT_INFO={
       {id:'s-bal',label:'Starting balance ($)',type:'number',def:1000},
     ]
   },
+  justspin:{
+    name:'Just Spin',
+    desc:'<b>No bets, no money — just spins the wheel.</b> Use Spin Once, Auto-Run, or the Bulk Run system to generate spin results. Every hit number is tracked in a frequency tally below. Useful for studying wheel randomness, observing distributions, or simply watching the wheel turn without risking a chip.',
+    cfg:[]
+  },
 };
 
 let S={
@@ -393,7 +398,9 @@ let S={
   // labouchere
   seq:[],origSeq:[1,2,3,4,5],
   // auto
-  autoTimer:null,wAngle:0
+  autoTimer:null,wAngle:0,
+  // justspin
+  hitCounts:{}
 };
 
 function initStratWheels(){
@@ -424,6 +431,11 @@ function pickStrat(name,btn){
     }
     row.appendChild(lbl);row.appendChild(inp);cfg.appendChild(row);
   });
+  const isJust=name==='justspin';
+  const hr=document.getElementById('hit-readout');
+  if(hr) hr.style.display=isJust?'block':'none';
+  const chartCv=document.getElementById('bulk-chart');
+  if(chartCv) chartCv.style.display=isJust?'none':'block';
   stratReset();
 }
 
@@ -445,6 +457,8 @@ function stratReset(){
   S.base=cfg.base;S.curBet=cfg.base;S.streak=0;S.cap=cfg.cap;S.unit=cfg.unit;
   S.field=cfg.field;S.fibIdx=0;S.wAngle=0;
   S.origSeq=[...cfg.seq];S.seq=[...cfg.seq];
+  S.hitCounts={};
+  renderHitReadout();
   document.getElementById('strat-num').textContent='—';
   document.getElementById('strat-num').className='';
   document.getElementById('strat-log').innerHTML='<span style="color:var(--text3)">Ready. Press Spin Once or Auto-Run...</span>';
@@ -462,6 +476,7 @@ function stratCalcBet(){
       if(!S.seq.length)return 0;
       return S.seq.length===1?S.seq[0]:S.seq[0]+S.seq[S.seq.length-1];
     case'jamesbond':return S.unit*200;
+    case'justspin':return 0;
   }
   return S.base;
 }
@@ -504,6 +519,31 @@ function stratSpin(){
   const arr=G.wheel==='american'?AMER_W:EURO_W;
   const ti=secureRandomInt(arr.length),result=arr[ti];
   const col=numCol(result);
+
+  if(S.name==='justspin'){
+    const _sl=Math.PI*2/arr.length;
+    const end=S.wAngle+Math.PI*2*Math.floor(4+Math.random()*3)+(-(ti*_sl)-_sl/2)-(S.wAngle%(Math.PI*2));
+    const dur=900,t0=performance.now(),a0=S.wAngle;
+    (function anim(now){
+      const t=Math.min((now-t0)/dur,1),ease=1-Math.pow(1-t,3);
+      S.wAngle=a0+(end-a0)*ease;
+      drawWheelOn('strat-canvas',S.wAngle,arr);
+      if(t<1)requestAnimationFrame(anim);
+      else{
+        S.wAngle=end;drawWheelOn('strat-canvas',S.wAngle,arr);
+        const sn=document.getElementById('strat-num');
+        sn.textContent=result===37?'00':result;sn.className=col;
+      }
+    })(performance.now());
+    S.round++;
+    const lbl=result===37?'00':result;
+    S.hitCounts[lbl]=(S.hitCounts[lbl]||0)+1;
+    stratLog(`#${S.round} | ${lbl} (${col})`, col==='red'?'win':col==='black'?'lose':'info');
+    renderHitReadout();
+    updStratDisplay();
+    return;
+  }
+
   const betAmt=stratCalcBet();
   if(betAmt>S.balance&&S.name!=='jamesbond'){
     stratLog('Insufficient balance — bankrupt! Reset to restart.','lose');
@@ -556,6 +596,16 @@ function stratSpin(){
 }
 
 function updStratDisplay(){
+  if(S.name==='justspin'){
+    document.getElementById('ss-bal').textContent='—';
+    document.getElementById('ss-rnd').textContent=S.round;
+    const ne=document.getElementById('ss-net');
+    ne.textContent='—';ne.style.color='var(--text2)';
+    document.getElementById('ss-bet').textContent='—';
+    document.getElementById('ss-peak').textContent='—';
+    document.getElementById('ss-low').textContent='—';
+    return;
+  }
   document.getElementById('ss-bal').textContent='$'+Math.round(S.balance);
   document.getElementById('ss-rnd').textContent=S.round;
   const net=S.balance-S.startBal;
@@ -566,6 +616,29 @@ function updStratDisplay(){
   document.getElementById('ss-bet').textContent=bet?'$'+bet:'$0';
   document.getElementById('ss-peak').textContent='$'+Math.round(S.peak);
   document.getElementById('ss-low').textContent='$'+Math.round(S.trough);
+}
+
+function renderHitReadout(){
+  const el=document.getElementById('hit-readout');
+  if(!el) return;
+  if(S.name!=='justspin'){ el.style.display='none'; return; }
+  el.style.display='block';
+  const isAm=G.wheel==='american';
+  const labels=['0'];
+  if(isAm) labels.push('00');
+  for(let i=1;i<=36;i++) labels.push(String(i));
+  const total=Object.values(S.hitCounts).reduce((a,b)=>a+b,0);
+  let max=0; for(const k in S.hitCounts){ if(S.hitCounts[k]>max) max=S.hitCounts[k]; }
+  const hottest=Object.entries(S.hitCounts).sort((a,b)=>b[1]-a[1]).slice(0,3)
+    .map(([n,c])=>`${n}×${c}`).join(' · ') || '—';
+  const cells=labels.map(lbl=>{
+    const num= lbl==='00' ? 37 : parseInt(lbl);
+    const col=numCol(num);
+    const c=S.hitCounts[lbl]||0;
+    const cls='hr-cell '+col+(c===0?' miss':'');
+    return `<div class="${cls}" title="${lbl}: ${c} hit${c===1?'':'s'}"><span class="hn">${lbl}</span><span class="hc">${c}</span></div>`;
+  }).join('');
+  el.innerHTML=`<div class="hr-title"><span>Hit Numbers · ${total} spin${total===1?'':'s'}</span><span style="color:var(--text3);font-weight:500;text-transform:none;letter-spacing:0">Hottest: ${hottest}</span></div><div class="hr-grid">${cells}</div>`;
 }
 
 function stratLog(msg,type){
@@ -620,6 +693,14 @@ function stratSpinSilent(){
   const ti = secureRandomInt(arr.length);
   const result = arr[ti];
   const col = numCol(result);
+
+  if(S.name === 'justspin'){
+    S.round++;
+    const lbl = result===37?'00':result;
+    S.hitCounts[lbl] = (S.hitCounts[lbl]||0) + 1;
+    return { won:false, profit:0, result:lbl, col, betAmt:0 };
+  }
+
   const betAmt = stratCalcBet();
 
   let profit = 0, won = false;
@@ -671,10 +752,13 @@ function runBulk(){
     }
     // Reset strategy state for this run (keep config)
     const cfg = stratGetCfg();
+    const savedHits = S.hitCounts;
     S.balance = cfg.bal; S.startBal = cfg.bal; S.round = 0; S.peak = cfg.bal; S.trough = cfg.bal;
     S.base = cfg.base; S.curBet = cfg.base; S.streak = 0; S.cap = cfg.cap; S.unit = cfg.unit;
     S.field = cfg.field; S.fibIdx = 0;
     S.origSeq = [...cfg.seq]; S.seq = [...cfg.seq];
+    // For Just Spin, accumulate hit counts across all runs in the bulk batch
+    S.hitCounts = S.name === 'justspin' ? savedHits : {};
 
     const balCurve = [S.balance];
     const spinResults = []; // {result, col, won}
@@ -686,8 +770,7 @@ function runBulk(){
       const end = Math.min(spin + 2000, totalSpins);
       while(spin < end){
         if(S.name==='labouchere' && !S.seq.length){ labDone=true; break; }
-        const betAmt = stratCalcBet();
-        if(betAmt > S.balance && S.name!=='jamesbond'){ bankrupt=true; break; }
+        if(S.balance < 0 && !bankrupt) bankrupt = true; // flag once but keep spinning
         const r = stratSpinSilent();
         if(r.won) wins++;
         balCurve.push(Math.round(S.balance));
@@ -699,7 +782,7 @@ function runBulk(){
       document.getElementById('bulk-progress').textContent =
         `Run ${runsDone+1}/${totalRuns} · spin ${spin}/${totalSpins} · ${pct}%`;
 
-      if(spin < totalSpins && !bankrupt && !labDone){
+      if(spin < totalSpins && !labDone){
         setTimeout(batch, 0); // yield to browser
       } else {
         allRunStats.push({
@@ -724,10 +807,52 @@ function runBulk(){
 function finishBulk(allStats, targetSpins){
   document.getElementById('bulk-progress').textContent = `✓ Done — ${allStats.length} run(s) complete`;
 
+  const chartCv = document.getElementById('bulk-chart');
+  if(chartCv) chartCv.style.display = S.name === 'justspin' ? 'none' : 'block';
+
+  if(S.name === 'justspin'){
+    const totalSpins = allStats.reduce((a,r)=>a+r.spins,0);
+    let reds=0, blacks=0, greens=0;
+    allStats.forEach(r => r.spinResults.forEach(s => {
+      if(s.col==='red') reds++; else if(s.col==='black') blacks++; else greens++;
+    }));
+    const sorted = Object.entries(S.hitCounts).sort((a,b)=>b[1]-a[1]);
+    const hottest = sorted[0] ? `${sorted[0][0]} (×${sorted[0][1]})` : '—';
+    const coldest = (() => {
+      const arr = G.wheel === 'american' ? AMER_W : EURO_W;
+      const labels = arr.map(n => n===37?'00':String(n));
+      const missed = labels.filter(l => !S.hitCounts[l]);
+      if(missed.length) return `${missed.length} never hit`;
+      const min = sorted[sorted.length-1];
+      return min ? `${min[0]} (×${min[1]})` : '—';
+    })();
+    stratLog(`── Bulk: ${totalSpins} spins | Reds ${reds} · Blacks ${blacks} · Greens ${greens} | Hottest ${hottest}`, 'info');
+    const sg = document.getElementById('bulk-summary-grid');
+    sg.innerHTML = '';
+    [
+      {l:'Runs', v:allStats.length},
+      {l:'Total Spins', v:totalSpins},
+      {l:'Reds', v:reds, c:'#e74c3c'},
+      {l:'Blacks', v:blacks, c:'#cfd2d6'},
+      {l:'Greens', v:greens, c:'#27ae60'},
+      {l:'Hottest', v:hottest, c:'var(--gold)'},
+      {l:'Coldest', v:coldest, c:'var(--text2)'},
+    ].forEach(item => {
+      const box = document.createElement('div');
+      box.className = 'stat-box';
+      box.innerHTML = `<div class="sl">${item.l}</div><div class="sv" style="${item.c?'color:'+item.c:''}">${item.v}</div>`;
+      sg.appendChild(box);
+    });
+    document.getElementById('bulk-summary').style.display = 'block';
+    renderBulkSpins(allStats);
+    renderHitReadout();
+    return;
+  }
+
   // log summary of last run
   const last = allStats[allStats.length-1];
   const net = last.endBal - last.startBal;
-  stratLog(`── Bulk: ${last.spins} spins | Net ${net>=0?'+':''}$${net} | Peak $${last.peak} | Low $${last.trough}${last.bankrupt?' | BANKRUPT':''}`,net>=0?'win':'lose');
+  stratLog(`── Bulk: ${last.spins} spins | Net ${net>=0?'+':''}$${net} | Peak $${last.peak} | Low $${last.trough}${last.bankrupt?' | BANKRUPT':''}`, last.bankrupt ? 'lose' : (net>=0?'win':'lose'));
 
   // Show summary cards
   if(allStats.length > 1){
@@ -776,6 +901,7 @@ function finishBulk(allStats, targetSpins){
   }
 
   renderBulkSpins(allStats);
+  renderHitReadout();
 }
 
 function renderBulkSpins(allStats){
@@ -783,19 +909,23 @@ function renderBulkSpins(allStats){
   const list = document.getElementById('bulk-spins-list');
   if(!wrap || !list) return;
   const colorFor = c => c==='red' ? '#e74c3c' : c==='black' ? '#1a1a1a' : '#27ae60';
+  const isJust = S.name === 'justspin';
   const html = allStats.map((r, ri) => {
     const net = r.endBal - r.startBal;
     const netStr = (net>=0?'+':'') + '$' + net;
     const netCol = net>=0 ? 'var(--win)' : 'var(--lose)';
     const chips = r.spinResults.map((s, i) => {
       const bg = colorFor(s.col);
-      const ring = s.won ? 'box-shadow:0 0 0 1px var(--gold)inset;' : '';
-      return `<span title="Spin ${i+1} · ${s.col}${s.won?' · WIN':''}" style="display:inline-flex;align-items:center;justify-content:center;min-width:22px;height:22px;padding:0 4px;border-radius:4px;background:${bg};color:#fff;font-size:11px;font-weight:600;${ring}">${s.result}</span>`;
+      const ring = (!isJust && s.won) ? 'box-shadow:0 0 0 1px var(--gold)inset;' : '';
+      return `<span title="Spin ${i+1} · ${s.col}${(!isJust && s.won)?' · WIN':''}" style="display:inline-flex;align-items:center;justify-content:center;min-width:22px;height:22px;padding:0 4px;border-radius:4px;background:${bg};color:#fff;font-size:11px;font-weight:600;${ring}">${s.result}</span>`;
     }).join('');
+    const meta = isJust
+      ? `${r.spinResults.length} spins`
+      : `${r.spinResults.length} spins · Net <span style="color:${netCol};font-weight:600">${netStr}</span>${r.bankrupt?' · <span style="color:var(--lose)">BANKRUPT</span>':''}`;
     return `<div>
       <div style="display:flex;justify-content:space-between;align-items:center;font-size:11px;color:var(--text3);margin-bottom:4px">
         <span style="color:${CHART_COLORS[ri % CHART_COLORS.length]};font-weight:600">Run ${ri+1}</span>
-        <span>${r.spinResults.length} spins · Net <span style="color:${netCol};font-weight:600">${netStr}</span>${r.bankrupt?' · <span style="color:var(--lose)">BANKRUPT</span>':''}</span>
+        <span>${meta}</span>
       </div>
       <div style="display:flex;flex-wrap:wrap;gap:3px">${chips}</div>
     </div>`;

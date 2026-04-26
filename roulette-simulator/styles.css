@@ -226,6 +226,16 @@ body > *{position:relative;z-index:1}
 #strat-log .l-lose{color:var(--lose);text-shadow:0 0 6px rgba(255,58,108,0.4)}
 #strat-log .l-info{color:var(--sw-cyan);text-shadow:0 0 6px rgba(0,240,255,0.4)}
 .strat-ctrl{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;justify-content:center}
+#hit-readout{background:rgba(8,0,26,0.7);border:1px solid var(--border);border-radius:8px;padding:10px}
+#hit-readout .hr-title{font-size:11px;color:var(--gold);font-weight:600;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center}
+#hit-readout .hr-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(46px,1fr));gap:4px}
+#hit-readout .hr-cell{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:4px 2px;border-radius:5px;color:#fff;font-size:11px;line-height:1.1;border:1px solid rgba(255,255,255,0.08)}
+#hit-readout .hr-cell.red{background:#c0392b}
+#hit-readout .hr-cell.black{background:#1a1a1a}
+#hit-readout .hr-cell.green{background:#1b5e20}
+#hit-readout .hr-cell .hn{font-weight:700;font-size:13px}
+#hit-readout .hr-cell .hc{opacity:.85;font-size:10px;margin-top:1px}
+#hit-readout .hr-cell.miss{opacity:.35}
 
 /* ── SETTINGS PANEL ── */
 #settings-area{display:flex;flex-direction:column;gap:14px;max-width:560px;width:100%;align-self:center;margin:0 auto}
