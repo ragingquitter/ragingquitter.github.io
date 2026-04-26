@@ -765,6 +765,12 @@ function finishBulk(allStats, targetSpins){
 function drawBulkChart(){
   const cv = document.getElementById('bulk-chart');
   const ctx = cv.getContext('2d');
+  const rect = cv.getBoundingClientRect();
+  const targetW = Math.max(1, Math.round(rect.width)) || cv.width;
+  const targetH = 200;
+  if(cv.width !== targetW) cv.width = targetW;
+  if(cv.height !== targetH) cv.height = targetH;
+  ctx.setTransform(1,0,0,1,0,0);
   const W = cv.width, H = cv.height;
   ctx.clearRect(0,0,W,H);
 
@@ -856,9 +862,6 @@ function drawBulkChart(){
 // ─── CHART CANVAS RESIZE ───
 function resizeBulkCanvas(){
   const cv=document.getElementById('bulk-chart');if(!cv)return;
-  const dpr=window.devicePixelRatio||1,rect=cv.getBoundingClientRect();
-  cv.width=Math.round(rect.width*dpr);cv.height=Math.round(200*dpr);
-  cv.getContext('2d').scale(dpr,dpr);
   drawBulkChart();
 }
 window.addEventListener('resize',()=>{clearTimeout(window._crt);window._crt=setTimeout(resizeBulkCanvas,150);});
