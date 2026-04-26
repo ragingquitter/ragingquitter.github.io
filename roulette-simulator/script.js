@@ -610,6 +610,8 @@ function clearBulkChart(){
   drawBulkChart();
   document.getElementById('bulk-summary').style.display = 'none';
   document.getElementById('bulk-progress').textContent = '';
+  const sp = document.getElementById('bulk-spins');
+  if(sp){ sp.style.display = 'none'; document.getElementById('bulk-spins-list').innerHTML = ''; }
 }
 
 // Run a single spin with no animation, returns {won, profit, result}
@@ -675,6 +677,7 @@ function runBulk(){
     S.origSeq = [...cfg.seq]; S.seq = [...cfg.seq];
 
     const balCurve = [S.balance];
+    const spinResults = []; // {result, col, won}
     let wins=0, bankrupt=false, labDone=false;
 
     // Process in batches of 2000 to stay responsive
@@ -688,6 +691,7 @@ function runBulk(){
         const r = stratSpinSilent();
         if(r.won) wins++;
         balCurve.push(Math.round(S.balance));
+        spinResults.push({ result: r.result, col: r.col, won: r.won });
         spin++;
       }
 
@@ -699,7 +703,7 @@ function runBulk(){
         setTimeout(batch, 0); // yield to browser
       } else {
         allRunStats.push({
-          balCurve, startBal: cfg.bal, endBal: S.balance,
+          balCurve, spinResults, startBal: cfg.bal, endBal: S.balance,
           peak: S.peak, trough: S.trough,
           spins: spin, wins, bankrupt, labDone
         });
@@ -770,6 +774,34 @@ function finishBulk(allStats, targetSpins){
     });
     document.getElementById('bulk-summary').style.display = 'block';
   }
+
+  renderBulkSpins(allStats);
+}
+
+function renderBulkSpins(allStats){
+  const wrap = document.getElementById('bulk-spins');
+  const list = document.getElementById('bulk-spins-list');
+  if(!wrap || !list) return;
+  const colorFor = c => c==='red' ? '#e74c3c' : c==='black' ? '#1a1a1a' : '#27ae60';
+  const html = allStats.map((r, ri) => {
+    const net = r.endBal - r.startBal;
+    const netStr = (net>=0?'+':'') + '$' + net;
+    const netCol = net>=0 ? 'var(--win)' : 'var(--lose)';
+    const chips = r.spinResults.map((s, i) => {
+      const bg = colorFor(s.col);
+      const ring = s.won ? 'box-shadow:0 0 0 1px var(--gold)inset;' : '';
+      return `<span title="Spin ${i+1} · ${s.col}${s.won?' · WIN':''}" style="display:inline-flex;align-items:center;justify-content:center;min-width:22px;height:22px;padding:0 4px;border-radius:4px;background:${bg};color:#fff;font-size:11px;font-weight:600;${ring}">${s.result}</span>`;
+    }).join('');
+    return `<div>
+      <div style="display:flex;justify-content:space-between;align-items:center;font-size:11px;color:var(--text3);margin-bottom:4px">
+        <span style="color:${CHART_COLORS[ri % CHART_COLORS.length]};font-weight:600">Run ${ri+1}</span>
+        <span>${r.spinResults.length} spins · Net <span style="color:${netCol};font-weight:600">${netStr}</span>${r.bankrupt?' · <span style="color:var(--lose)">BANKRUPT</span>':''}</span>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:3px">${chips}</div>
+    </div>`;
+  }).join('');
+  list.innerHTML = html;
+  wrap.style.display = 'block';
 }
 
 function drawBulkChart(){
