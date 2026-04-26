@@ -13,6 +13,16 @@ const COL1=[1,4,7,10,13,16,19,22,25,28,31,34];
 const COL2=[2,5,8,11,14,17,20,23,26,29,32,35];
 const COL3=[3,6,9,12,15,18,21,24,27,30,33,36];
 
+// Cryptographically-secure uniform integer in [0, n) using crypto.getRandomValues.
+// Rejection sampling avoids the modulo bias you'd get from `rand % n` when 2^32 isn't a multiple of n.
+function secureRandomInt(n){
+  const max=Math.floor(0x100000000/n)*n;
+  const buf=new Uint32Array(1);
+  let v;
+  do{ crypto.getRandomValues(buf); v=buf[0]; } while(v>=max);
+  return v%n;
+}
+
 function numCol(n){return n===0||n===37?'green':RED_S.has(n)?'red':'black';}
 
 // ─── GAME STATE ───
@@ -213,7 +223,7 @@ function spin(){
   document.getElementById('spin-btn').disabled=true;
   G.lastBets={...G.bets};
   const arr=wheelArr();
-  const ti=Math.floor(Math.random()*arr.length),result=arr[ti];
+  const ti=secureRandomInt(arr.length),result=arr[ti];
   const sl=Math.PI*2/arr.length;
   const end=G.wAngle+Math.PI*2*Math.floor(7+Math.random()*5)+(-ti*sl-sl/2)-(G.wAngle%(Math.PI*2));
   const dur=3200+Math.random()*800,t0=performance.now(),a0=G.wAngle;
@@ -492,7 +502,7 @@ function stratSpin(){
     stratLog('Sequence complete! Target reached. Reset to play again.','info');return;
   }
   const arr=G.wheel==='american'?AMER_W:EURO_W;
-  const ti=Math.floor(Math.random()*arr.length),result=arr[ti];
+  const ti=secureRandomInt(arr.length),result=arr[ti];
   const col=numCol(result);
   const betAmt=stratCalcBet();
   if(betAmt>S.balance&&S.name!=='jamesbond'){
@@ -605,7 +615,7 @@ function clearBulkChart(){
 // Run a single spin with no animation, returns {won, profit, result}
 function stratSpinSilent(){
   const arr = G.wheel === 'american' ? AMER_W : EURO_W;
-  const ti = Math.floor(Math.random() * arr.length);
+  const ti = secureRandomInt(arr.length);
   const result = arr[ti];
   const col = numCol(result);
   const betAmt = stratCalcBet();
